@@ -166,14 +166,16 @@ function LoginForm() {
                         fontSize: "24px",
                         fontWeight: "700",
                         color: "white",
+                        textAlign: "center",
                         margin: "0 0 8px 0",
                         letterSpacing: "-0.02em"
                     }}>Bienvenue</h2>
                     <p style={{
                         fontSize: "14px",
+                        textAlign: "center",
                         color: "#94a3b8",
                         margin: 0
-                    }}>Connectez-vous pour accéder au portail SIGA.</p>
+                    }}>Connectez-vous pour accéder au portail MIST.</p>
                 </div>
 
                 {error && (
