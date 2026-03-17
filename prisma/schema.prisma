@@ -1,0 +1,375 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 🔷 MODULE 1 : UTILISATEURS / COMMERCIAUX
+
+model User {
+  id            Int      @id @default(autoincrement())
+  nom           String   @db.VarChar(100)
+  prenom        String   @db.VarChar(100)
+  email         String   @unique @db.VarChar(150)
+  telephone     String?  @db.VarChar(20)
+  role          String   @db.VarChar(50) // 'Commercial', 'Manager', 'Directeur commercial', 'Administrateur'
+  zone          String?  @db.VarChar(100)
+  password_hash String   @db.VarChar(255)
+  date_creation DateTime @default(now())
+
+  visites       Visite[]
+  rdvs          RendezVous[]
+  suivis_actions SuiviAction[] @relation("UserActions")
+}
+
+// 🔷 MODULE 2 : ENTREPRISES (PROSPECTS / CLIENTS)
+
+model Entreprise {
+  id             Int       @id @default(autoincrement())
+  raison_sociale String    @db.VarChar(300)
+  secteur_id     Int
+  secteur        Secteur   @relation(fields: [secteur_id], references: [id])
+  secteur_autre  String?   @db.VarChar(100)
+  ville          String?   @db.VarChar(100)
+  adresse        String?   @db.Text
+  statut         String?   @db.VarChar(100) @default("Prospect brut")
+  date_creation  DateTime  @default(now())
+
+  contacts       Contact[]
+  visites        Visite[]
+  rdvs           RendezVous[]
+  suivis_actions SuiviAction[]
+}
+
+model Secteur {
+  id          Int          @id @default(autoincrement())
+  nom         String       @db.VarChar(100)
+  entreprises Entreprise[]
+}
+
+model Contact {
+  id            Int        @id @default(autoincrement())
+  entreprise_id Int
+  entreprise    Entreprise @relation(fields: [entreprise_id], references: [id])
+  nom           String     @db.VarChar(150)
+  fonction      String?    @db.VarChar(100)
+  telephone     String?    @db.VarChar(20)
+  email         String?    @db.VarChar(150)
+
+  visites       Visite[]
+}
+
+// 🔷 MODULE 3 : VISITES TERRAIN
+
+model Visite {
+  id               Int          @id @default(autoincrement())
+  date_visite      DateTime     @db.Date
+  commercial_id    Int
+  commercial       User         @relation(fields: [commercial_id], references: [id])
+  entreprise_id    Int
+  entreprise       Entreprise   @relation(fields: [entreprise_id], references: [id])
+  type_collecte_id Int
+  type_collecte    TypeCollecte @relation(fields: [type_collecte_id], references: [id])
+  localisation_site String?     @db.VarChar(200)
+  contact_id       Int?
+  contact          Contact?     @relation(fields: [contact_id], references: [id])
+  type_collecte_autre String?   @db.VarChar(100)
+  observations     String?      @db.Text
+  mois_visite      String?      @db.VarChar(7)
+
+  projets          Projet[]
+}
+
+model TypeCollecte {
+  id      Int      @id @default(autoincrement())
+  nom     String   @db.VarChar(100)
+  visites Visite[]
+}
+
+// 🔷 MODULE 4 : PROJETS / CHANTIERS
+
+model Projet {
+  id               Int           @id @default(autoincrement())
+  visite_id        Int
+  visite           Visite        @relation(fields: [visite_id], references: [id])
+  activite         String?       @db.VarChar(100)
+  description      String?       @db.Text
+  date_debut       DateTime?     @db.Date
+  date_fin_estimee DateTime?     @db.Date
+  statut_projet_id Int?
+  statut_projet    StatutProjet? @relation(fields: [statut_projet_id], references: [id])
+  periode_projet   String?       @db.VarChar(100)
+  taille_projet_id Int?
+  taille_projet    TailleProjet? @relation(fields: [taille_projet_id], references: [id])
+  statut_projet_autre String?   @db.VarChar(100)
+  taille_projet_autre String?   @db.VarChar(100)
+  parc_materiel       String?   @db.Text
+
+  equipements      ProjetEquipement[]
+  consommations    Consommation[]
+  fournisseurs     ProjetFournisseur[]
+  opportunites     Opportunite[]
+}
+
+model StatutProjet {
+  id      Int      @id @default(autoincrement())
+  nom     String   @db.VarChar(100)
+  projets Projet[]
+}
+
+model TailleProjet {
+  id      Int      @id @default(autoincrement())
+  nom     String   @db.VarChar(100)
+  projets Projet[]
+}
+
+model Equipement {
+  id                 Int                @id @default(autoincrement())
+  nom                String             @db.VarChar(100)
+  projet_equipements ProjetEquipement[]
+}
+
+model ProjetEquipement {
+  id              Int        @id @default(autoincrement())
+  projet_id       Int
+  projet          Projet     @relation(fields: [projet_id], references: [id])
+  equipement_id   Int
+  equipement      Equipement @relation(fields: [equipement_id], references: [id])
+  nombre          Int?
+  heures_moy_jour Int?
+  equipement_autre String?    @db.VarChar(100)
+}
+
+// 🔷 MODULE 5 : CONSOMMATION CARBURANT
+
+model Produit {
+  id            Int            @id @default(autoincrement())
+  nom           String         @db.VarChar(100)
+  consommations Consommation[]
+}
+
+model Consommation {
+  id                      Int     @id @default(autoincrement())
+  projet_id               Int
+  projet                  Projet  @relation(fields: [projet_id], references: [id])
+  produit_id              Int
+  produit                 Produit @relation(fields: [produit_id], references: [id])
+  conso_jour              Decimal? @db.Decimal(10,2)
+  conso_semaine           Decimal? @db.Decimal(10,2)
+  conso_mois              Decimal? @db.Decimal(10,2)
+  conso_mensuelle_estimee Decimal? @db.Decimal(10,2)
+}
+
+model ModeApprovisionnement {
+  id   Int    @id @default(autoincrement())
+  nom  String @db.VarChar(100)
+}
+
+model Fournisseur {
+  id        Int                 @id @default(autoincrement())
+  nom       String              @db.VarChar(100)
+  telephone String?             @db.VarChar(20)
+  adresse   String?             @db.Text
+  
+  projets_principal  ProjetFournisseur[]  @relation("FournisseurPrincipal")
+  projets_secondaire ProjetFournisseur[]  @relation("FournisseurSecondaire")
+}
+
+model ProjetFournisseur {
+  id                        Int          @id @default(autoincrement())
+  projet_id                 Int
+  projet                    Projet       @relation(fields: [projet_id], references: [id])
+  fournisseur_principal_id  Int?
+  fournisseur_principal     Fournisseur? @relation("FournisseurPrincipal", fields: [fournisseur_principal_id], references: [id])
+  fournisseur_secondaire_id Int?
+  fournisseur_secondaire    Fournisseur? @relation("FournisseurSecondaire", fields: [fournisseur_secondaire_id], references: [id])
+  type_relation_id          Int?
+  type_relation             TypeRelation? @relation(fields: [type_relation_id], references: [id])
+  satisfaction_id           Int?
+  satisfaction              Satisfaction? @relation(fields: [satisfaction_id], references: [id])
+  type_relation_autre       String?       @db.VarChar(100)
+  satisfaction_autre        String?       @db.VarChar(100)
+}
+
+model TypeRelation {
+  id           Int                 @id @default(autoincrement())
+  nom          String              @db.VarChar(100)
+  fournisseurs ProjetFournisseur[]
+}
+
+model Satisfaction {
+  id           Int                 @id @default(autoincrement())
+  nom          String              @db.VarChar(100)
+  fournisseurs ProjetFournisseur[]
+}
+
+// 🔷 MODULE 6 : OPPORTUNITÉS COMMERCIALES
+
+model Opportunite {
+  id                 Int               @id @default(autoincrement())
+  projet_id          Int
+  projet             Projet            @relation(fields: [projet_id], references: [id])
+  niveau_id          Int?
+  niveau             NiveauOpportunite? @relation(fields: [niveau_id], references: [id])
+  decideur_identifie Boolean           @default(false)
+  decideur_nom       String?           @db.VarChar(200)
+  fenetre_entree_id  Int?
+  fenetre_entree     FenetreEntree?    @relation(fields: [fenetre_entree_id], references: [id])
+  volume_potentiel   Decimal?          @db.Decimal(12,2)
+  priorite_id        Int?
+  priorite           Priorite?         @relation(fields: [priorite_id], references: [id])
+  niveau_autre       String?           @db.VarChar(100)
+  fenetre_entree_autre String?         @db.VarChar(100)
+  priorite_autre     String?           @db.VarChar(100)
+
+  actions            ActionCommerciale[]
+}
+
+model NiveauOpportunite {
+  id           Int           @id @default(autoincrement())
+  nom          String        @db.VarChar(100)
+  opportunites Opportunite[]
+}
+
+model FenetreEntree {
+  id           Int           @id @default(autoincrement())
+  nom          String        @db.VarChar(100)
+  opportunites Opportunite[]
+}
+
+model Priorite {
+  id           Int           @id @default(autoincrement())
+  nom          String        @db.VarChar(100)
+  opportunites Opportunite[]
+}
+
+model ActionCommerciale {
+  id             Int          @id @default(autoincrement())
+  opportunite_id Int
+  opportunite    Opportunite  @relation(fields: [opportunite_id], references: [id])
+  type_action_id Int
+  type_action    TypeAction   @relation(fields: [type_action_id], references: [id])
+  date_action    DateTime?    @db.Date
+  statut         String       @default("A_FAIRE") @db.VarChar(30) // 'A_FAIRE', 'EN_COURS', 'TERMINE', 'ANNULE'
+  commentaire    String?      @db.Text
+  type_action_autre String?      @db.VarChar(100)
+}
+
+model TypeAction {
+  id      Int                 @id @default(autoincrement())
+  nom     String              @db.VarChar(100)
+  actions ActionCommerciale[]
+}
+
+// 🔷 MODULE 7 : REPORTING / INTELLIGENCE MARCHE (IMPORT EXCEL)
+
+model ReportingVisite {
+  id                      Int      @id @default(autoincrement())
+  import_date             DateTime @default(now())
+  
+  // Champs tirés de l'Excel "Saisie"
+  excel_id                String?  @db.VarChar(50)
+  date_visite             String?  @db.VarChar(50)
+  commercial              String?  @db.VarChar(200)
+  type_collecte           String?  @db.VarChar(100)
+  raison_sociale          String?  @db.VarChar(300)
+  secteur                 String?  @db.VarChar(100)
+  secteur_autre           String?  @db.VarChar(100)
+  localisation            String?  @db.VarChar(200)
+  contact_nom             String?  @db.VarChar(200)
+  contact_fonction        String?  @db.VarChar(150)
+  contact_tel             String?  @db.VarChar(50)
+  activite                String?  @db.VarChar(200)
+  activite_autre          String?  @db.VarChar(200)
+  description             String?  @db.Text
+  debut                   String?  @db.VarChar(100)
+  fin_estimee             String?  @db.VarChar(100)
+  statut_projet           String?  @db.VarChar(100)
+  periode_projet          String?  @db.VarChar(100)
+  taille_projet           String?  @db.VarChar(100)
+  equipements             String?  @db.Text
+  nb_equip                String?  @db.VarChar(50)
+  heures_jour             String?  @db.VarChar(50)
+  produit                 String?  @db.VarChar(100)
+  produit_autre           String?  @db.VarChar(100)
+  conso_jour              Decimal? @db.Decimal(12,2)
+  conso_semaine           Decimal? @db.Decimal(12,2)
+  conso_mois              Decimal? @db.Decimal(12,2)
+  conso_mensuelle_estime  Decimal? @db.Decimal(12,2)
+  mode_appro              String?  @db.VarChar(100)
+  fournisseur_principal   String?  @db.VarChar(200)
+  fournisseur_secondaire  String?  @db.VarChar(200)
+  type_relation           String?  @db.VarChar(100)
+  satisfaction            String?  @db.VarChar(50)
+  opportunite_niveau      String?  @db.VarChar(50)
+  decideur_identifie      String?  @db.VarChar(50)
+  decideur_nom            String?  @db.VarChar(200)
+  fenetre_entree          String?  @db.VarChar(100)
+  observations            String?  @db.Text
+  actions                 String?  @db.Text
+  volume_potentiel_dir    Decimal? @db.Decimal(12,2)
+  priorite                String?  @db.VarChar(50)
+  volume_potentiel        Decimal? @db.Decimal(12,2)
+  mois_visite             String?  @db.VarChar(50)
+  entreprise_id           Int?
+}
+
+// 🔷 MODULE 8 : RENDEZ-VOUS / CALENDRIER
+
+model RendezVous {
+  id             Int          @id @default(autoincrement())
+  objet          String       @db.VarChar(200)
+  date_rdv       DateTime
+  entreprise_id  Int
+  entreprise    Entreprise   @relation(fields: [entreprise_id], references: [id])
+  commercial_id  Int
+  commercial     User         @relation(fields: [commercial_id], references: [id])
+  statut         String       @default("PROGRAMME") @db.VarChar(30) // 'PROGRAMME', 'EFFECTUE', 'ANNULE', 'REPORTE'
+  commentaire    String?      @db.Text
+  rappel_envoye  Boolean      @default(false)
+  date_creation  DateTime     @default(now())
+
+  @@index([date_rdv])
+  @@index([commercial_id])
+}
+
+
+// 🔷 MODULE 9 : SUIVI D'ACTIONS COMMERCIALES
+
+model SuiviAction {
+  id                    Int      @id @default(autoincrement())
+  entreprise_id         Int
+  entreprise            Entreprise @relation(fields: [entreprise_id], references: [id])
+  user_id               Int
+  user                  User     @relation("UserActions", fields: [user_id], references: [id])
+  
+  date_action           DateTime @db.Date
+  heure_debut           String?  @db.VarChar(10)
+  heure_fin             String?  @db.VarChar(10)
+  
+  type_action           String   @db.VarChar(100) // Appel, Visite, E-mail, Réunion, Présentation, Autre
+  but_intervention      String   @db.VarChar(200) // Prise de contact, Relance, Proposition, Résolution, Recouvrement, Autre
+  sujet_principal       String   @db.Text
+  
+  personne_contactee    String?  @db.VarChar(200) // Nom, Fonction
+  resume_discussion     String?  @db.Text
+  questions_client      String?  @db.Text
+  reponses_apportees    String?  @db.Text
+  documents_remis       String?  @db.Text // Brochure, Devis, Contrat, etc.
+  
+  statut_obtenu         String?  @db.VarChar(200) // Intéressé, En attente, À relancer, Refusé, Contrat signé
+  commentaires          String?  @db.Text
+  niveau_interet        Int?     // Echelle 1 à 10
+  
+  prochaine_etape       String?  @db.VarChar(200) // Rappel, Devis, Visite, Envoi contrat, Autre
+  date_prochaine_action DateTime? @db.Date
+  priorite              String?  @db.VarChar(20)  // Basse, Moyenne, Haute
+  
+  date_creation         DateTime @default(now())
+
+  @@index([date_action])
+  @@index([entreprise_id])
+  @@index([user_id])
+}
