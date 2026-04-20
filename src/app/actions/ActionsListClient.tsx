@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { deleteSuiviAction } from "@/app/actions/crm";
 
 export default function ActionsListClient({ 
     initialActions, 
@@ -18,6 +20,22 @@ export default function ActionsListClient({
     const [filterType, setFilterType] = useState("Tous");
     const [filterPriorite, setFilterPriorite] = useState("Toutes");
     const [selectedAction, setSelectedAction] = useState<any>(null);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+
+    const handleDelete = async (id: number, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (!window.confirm("Voulez-vous vraiment supprimer cette action ?")) return;
+        setDeletingId(id);
+        const res = await deleteSuiviAction(id);
+        if (res.success) {
+            setActions(prev => prev.filter(a => a.id !== id));
+            if (selectedAction?.id === id) setSelectedAction(null);
+            toast.success("Action supprimée avec succès");
+        } else {
+            toast.error("Erreur lors de la suppression");
+        }
+        setDeletingId(null);
+    };
 
     const typesAction = ["Appel", "Visite", "E-mail", "Réunion", "Présentation", "Autre"];
     const priorites = ["Basse", "Moyenne", "Haute"];
@@ -153,12 +171,26 @@ export default function ActionsListClient({
                                             {action.user?.prenom} {action.user?.nom}
                                         </span>
                                     </div>
-                                    {action.prochaine_etape && (
-                                        <div className="flex items-center gap-2 text-primary">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{action.prochaine_etape}</span>
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {action.prochaine_etape && (
+                                            <div className="flex items-center gap-2 text-primary">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">{action.prochaine_etape}</span>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={(e) => handleDelete(action.id, e)}
+                                            disabled={deletingId === action.id}
+                                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 transition-all active:scale-95 disabled:opacity-50"
+                                            title="Supprimer cette action"
+                                        >
+                                            {deletingId === action.id ? (
+                                                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                            ) : (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -277,6 +309,14 @@ export default function ActionsListClient({
                             </div>
 
                             <div className="flex justify-end pt-4 gap-4">
+                                <button
+                                    onClick={() => handleDelete(selectedAction.id)}
+                                    disabled={deletingId === selectedAction.id}
+                                    className="px-6 py-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 font-bold text-xs hover:bg-red-500/20 transition-all uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                    Supprimer
+                                </button>
                                 <Link 
                                     href={`/entreprises/${selectedAction.entreprise_id}`}
                                     className="px-6 py-3 rounded-2xl bg-surface-2 border border-border text-muted font-bold text-xs hover:bg-surface-3 transition-all uppercase tracking-widest"

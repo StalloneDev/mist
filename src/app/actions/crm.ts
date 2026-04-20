@@ -318,6 +318,101 @@ export async function getSuivisActions(filters?: {
         return { success: false, error: "Impossible de charger les actions" };
     }
 }
+
+/**
+ * Supprime un suivi d'action par ID
+ */
+export async function deleteSuiviAction(id: number) {
+    try {
+        await db.suiviAction.delete({ where: { id } });
+        revalidatePath("/actions");
+        return { success: true };
+    } catch (error: any) {
+        console.error("Erreur deleteSuiviAction:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Supprime toutes les actions liées à une entreprise par nom (raison sociale)
+ */
+export async function deleteAllActionsForEntrepriseByName(raisonSociale: string) {
+    try {
+        const entreprise = await db.entreprise.findFirst({
+            where: { raison_sociale: { equals: raisonSociale, mode: 'insensitive' } },
+            select: { id: true }
+        });
+
+        if (!entreprise) return { success: false, error: `Entreprise "${raisonSociale}" introuvable` };
+
+        const result = await db.suiviAction.deleteMany({
+            where: { entreprise_id: entreprise.id }
+        });
+
+        revalidatePath("/actions");
+        return { success: true, count: result.count };
+    } catch (error: any) {
+        console.error("Erreur deleteAllActionsForEntrepriseByName:", error);
+        return { success: false, error: error.message };
+    }
+}
+/**
+ * Supprime une entreprise et TOUTES ses données liées (Contacts, Actions, Visites, RDVs)
+ */
+export async function deleteEntreprise(id: number) {
+    try {
+        await db.$transaction(async (tx) => {
+            // 1. Supprimer les SuivisActions
+            await tx.suiviAction.deleteMany({ where: { entreprise_id: id } });
+            
+            // 2. Supprimer les RendezVous
+            await tx.rendezVous.deleteMany({ where: { entreprise_id: id } });
+
+            // 3. Supprimer les Visites et leurs relations (Projets, etc.)
+            const visites = await tx.visite.findMany({ where: { entreprise_id: id }, select: { id: true } });
+            for (const v of visites) {
+                // Supprimer les Projets liés à la visite
+                const projets = await tx.projet.findMany({ where: { visite_id: v.id }, select: { id: true } });
+                for (const p of projets) {
+                    await tx.projetEquipement.deleteMany({ where: { projet_id: p.id } });
+                    await tx.consommation.deleteMany({ where: { projet_id: p.id } });
+                    await tx.projetFournisseur.deleteMany({ where: { projet_id: p.id } });
+                    
+                    // Supprimer les actions commerciales liées aux opportunités du projet
+                    const opportunites = await tx.opportunite.findMany({ where: { projet_id: p.id }, select: { id: true } });
+                    for (const opp of opportunites) {
+                        await tx.actionCommerciale.deleteMany({ where: { opportunite_id: opp.id } });
+                    }
+                    
+                    await tx.opportunite.deleteMany({ where: { projet_id: p.id } });
+                    await tx.projet.delete({ where: { id: p.id } });
+                }
+                await tx.visite.delete({ where: { id: v.id } });
+            }
+
+            // 4. Supprimer les Contacts
+            await tx.contact.deleteMany({ where: { entreprise_id: id } });
+
+            // 5. Mettre à jour le ReportingVisite (dissocier au lieu de supprimer)
+            await tx.reportingVisite.updateMany({
+                where: { entreprise_id: id },
+                data: { entreprise_id: null }
+            });
+
+            // 6. Supprimer enfin l'entreprise
+            await tx.entreprise.delete({ where: { id } });
+        });
+
+        revalidatePath("/entreprises");
+        revalidatePath("/dashboard");
+        revalidatePath("/reporting");
+        return { success: true };
+    } catch (error: any) {
+        console.error("Erreur deleteEntreprise:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function updateEntreprise(id: number, data: any) {
     try {
         const result = await db.$transaction(async (tx) => {

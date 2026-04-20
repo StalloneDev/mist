@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { updateEntrepriseStatut } from "@/app/actions/crm";
+import { updateEntrepriseStatut, deleteEntreprise } from "@/app/actions/crm";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import EditEntrepriseModal from "./EditEntrepriseModal";
@@ -36,6 +36,7 @@ export default function EntrepriseListClient({
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedEntreprise, setSelectedEntreprise] = useState<any>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
     useEffect(() => {
         setEntreprises(initialEntreprises);
@@ -55,6 +56,22 @@ export default function EntrepriseListClient({
         }
     };
 
+    const handleDelete = async (id: number, name: string) => {
+        if (!window.confirm(`Voulez-vous vraiment supprimer l'entreprise "${name}" ? Cela supprimera TOUTES les données liées (actions, contacts, visites).`)) {
+            return;
+        }
+
+        setIsDeleting(id);
+        const res = await deleteEntreprise(id);
+        if (res.success) {
+            setEntreprises(prev => prev.filter(e => e.id !== id));
+            toast.success(`Entreprise "${name}" supprimée`);
+        } else {
+            toast.error("Erreur lors de la suppression");
+        }
+        setIsDeleting(null);
+    };
+
     const filtered = entreprises.filter(e => {
         const isClient = e.statut?.startsWith('Client') || e.statut?.includes('Gagné');
         const isProspect = !isClient;
@@ -66,8 +83,8 @@ export default function EntrepriseListClient({
             e.statut === filterStatut;
 
         const matchesSecteur = filterSecteur === "Tous" || e.secteur_id?.toString() === filterSecteur;
-        const matchesSearch = e.raison_sociale.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            e.ville?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (e.raison_sociale || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            (e.ville || "").toLowerCase().includes(searchTerm.toLowerCase());
         
         return matchesQuickFilter && matchesSecteur && matchesSearch;
     });
@@ -180,12 +197,26 @@ export default function EntrepriseListClient({
                                         <Link 
                                             href={`/entreprises/${e.id}`}
                                             className="p-2 rounded-xl bg-white/5 border border-white/5 text-muted hover:text-foreground hover:bg-white/10 transition-all font-bold text-[10px] px-3 uppercase tracking-widest"
+                                            title="Fiche détaillée"
                                         >
-                                            Fiche Detaillee
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
                                         </Link>
+                                        <button 
+                                            onClick={() => handleDelete(e.id, e.raison_sociale)}
+                                            disabled={isDeleting === e.id}
+                                            className="p-2 rounded-xl bg-red-500/10 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                                            title="Supprimer l'entreprise"
+                                        >
+                                            {isDeleting === e.id ? (
+                                                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                            ) : (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                                            )}
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
+
                         ))}
                     </tbody>
                 </table>
