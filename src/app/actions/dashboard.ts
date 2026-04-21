@@ -193,3 +193,47 @@ export async function getRecentActivities(limit = 5) {
         return { success: false, error: "Erreur lors du chargement des activités" };
     }
 }
+
+/**
+ * Récupère les détails des entreprises d'un secteur spécifique
+ */
+export async function getSectorDetails(sectorName: string) {
+    try {
+        const querySector = sectorName === "Autre" ? null : sectorName;
+        
+        const data = await db.reportingVisite.findMany({
+            where: { 
+                OR: [
+                    { secteur: querySector },
+                    ...(sectorName === "Autre" ? [{ secteur: "" }] : [])
+                ]
+            },
+            select: {
+                id: true,
+                raison_sociale: true,
+                localisation: true,
+                commercial: true,
+                opportunite_niveau: true,
+                volume_potentiel: true,
+                volume_potentiel_dir: true,
+                conso_mensuelle_estime: true
+            },
+            orderBy: {
+                volume_potentiel: 'desc'
+            }
+        });
+
+        const serialized = data.map(record => {
+            const result: any = { ...record };
+            if (result.conso_mensuelle_estime !== null) result.conso_mensuelle_estime = Number(result.conso_mensuelle_estime);
+            if (result.volume_potentiel_dir !== null) result.volume_potentiel_dir = Number(result.volume_potentiel_dir);
+            if (result.volume_potentiel !== null) result.volume_potentiel = Number(result.volume_potentiel);
+            return result;
+        });
+
+        return { success: true, data: serialized };
+    } catch (error: any) {
+        console.error("Erreur getSectorDetails:", error);
+        return { success: false, error: error.message };
+    }
+}

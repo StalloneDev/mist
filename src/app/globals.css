@@ -2759,3 +2759,35 @@ h1 {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
+
+@media print {
+  /* Hide sidebar, navigation, buttons, and top filters */
+  .sidebar, nav, header, button, .premium-panel:first-of-type, .reporting-modal-wrapper, .modal-backdrop {
+    display: none !important;
+  }
+  
+  /* Make page wrapper use full width and height */
+  main.page-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  
+  /* Remove overflow from scrollable tables so it fully prints across pages or horizontal canvas */
+  .custom-scrollbar, .overflow-x-auto, .reporting-scroll {
+    overflow: visible !important;
+    max-width: none !important;
+  }
+  
+  /* Make sure it's readable */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 8pt !important;
+  }
+
+  table {
+    width: max-content !important;
+  }
+}

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import { getReportingData, deleteReportingRow, updateReportingRow, getReportingRowById } from "../actions/reporting";
+import { exportReportingToExcel, exportReportingToPdf } from "@/lib/exportUtils";
 import {
     getSecteurs, getTypesCollecte, getStatutsProjet, getTaillesProjet,
     getEquipements, getProduits, getFournisseurs, getTypesRelation,
@@ -12,13 +13,34 @@ import {
 
 const COLUMNS = [
     { key: "id", label: "ID", width: "70px" },
-    { key: "date_visite", label: "Date visite", width: "120px" },
-    { key: "commercial", label: "Commercial", width: "160px" },
+    { key: "date_visite", label: "Date", width: "100px" },
+    { key: "commercial", label: "Commercial", width: "140px" },
     { key: "type_collecte", label: "Type", width: "110px" },
-    { key: "raison_sociale", label: "Raison sociale", width: "180px" },
+    { key: "raison_sociale", label: "Raison Sociale", width: "180px" },
     { key: "secteur", label: "Secteur", width: "130px" },
-    { key: "localisation", label: "Localisation", width: "160px" },
-    { key: "statut", label: "Actions", width: "130px" },
+    { key: "localisation", label: "Ville", width: "130px" },
+    { key: "contact_nom", label: "Contact", width: "140px" },
+    { key: "contact_fonction", label: "Fonction", width: "130px" },
+    { key: "contact_tel", label: "Téléphone", width: "120px" },
+    { key: "activite", label: "Activité", width: "140px" },
+    { key: "description", label: "Projet", width: "200px" },
+    { key: "statut_projet", label: "Statut Proj.", width: "120px" },
+    { key: "taille_projet", label: "Taille", width: "110px" },
+    { key: "equipements", label: "Équipements", width: "150px" },
+    { key: "nb_equip", label: "Nb. Équip.", width: "100px" },
+    { key: "heures_jour", label: "H/Jour", width: "90px" },
+    { key: "produit", label: "Produit", width: "130px" },
+    { key: "conso_jour", label: "Conso/J (L)", width: "100px" },
+    { key: "conso_semaine", label: "Conso/S (L)", width: "100px" },
+    { key: "conso_mois", label: "Conso/M (L)", width: "100px" },
+    { key: "conso_mensuelle_estime", label: "Est. Mensuelle (L)", width: "130px" },
+    { key: "mode_appro", label: "Mode Appro.", width: "120px" },
+    { key: "fournisseur_principal", label: "Fourn. Principal", width: "150px" },
+    { key: "type_relation", label: "Type Relation", width: "120px" },
+    { key: "opportunite_niveau", label: "Opportunité", width: "120px" },
+    { key: "volume_potentiel", label: "Vol. Potentiel (L)", width: "130px" },
+    { key: "actions", label: "Actions Prévues", width: "150px" },
+    { key: "statut", label: "Actions DB", width: "130px" },
 ];
 
 const OPPORTUNITE_COLORS: Record<string, string> = {
@@ -442,8 +464,24 @@ export default function ReportingPage() {
                     </p>
                 </div>
 
-                {/* Import Button */}
-                <div className="flex items-center gap-4">
+                {/* Export & Import Buttons */}
+                <div className="flex flex-wrap justify-end items-center gap-3">
+                    <button
+                        onClick={() => exportReportingToPdf(filteredRows)}
+                        className="group flex justify-center w-full sm:w-auto items-center gap-2 px-5 py-3 sm:py-3.5 rounded-xl font-bold text-xs cursor-pointer transition-all duration-300 transform active:scale-95 bg-white/5 hover:bg-white/10 text-foreground border border-white/10"
+                    >
+                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
+                        EXPORTER PDF
+                    </button>
+                    
+                    <button
+                        onClick={() => exportReportingToExcel(filteredRows)}
+                        className="group flex justify-center w-full sm:w-auto items-center gap-2 px-5 py-3 sm:py-3.5 rounded-xl font-bold text-xs cursor-pointer transition-all duration-300 transform active:scale-95 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/20"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 7h10" /><path d="M7 12h10" /><path d="M7 17h10" /></svg>
+                        EXPORTER EXCEL
+                    </button>
+
                     <input
                         ref={fileRef}
                         type="file"
@@ -454,20 +492,20 @@ export default function ReportingPage() {
                     />
                     <label
                         htmlFor="excel-import"
-                        className={`group flex justify-center w-full sm:w-auto items-center gap-3 px-6 py-3 sm:px-8 sm:py-4 rounded-2xl font-black text-sm cursor-pointer transition-all duration-300 transform active:scale-95 ${loading
+                        className={`group flex justify-center w-full sm:w-auto items-center gap-2 px-5 py-3 sm:py-3.5 rounded-xl font-black text-xs cursor-pointer transition-all duration-300 transform active:scale-95 ${loading
                             ? "bg-slate-800 text-muted cursor-wait border border-white/5"
                             : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/30 border border-emerald-400/20"
                             }`}
                     >
                         {loading ? (
                             <>
-                                <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                                <span>Importation en cours...</span>
+                                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                <span>Importation...</span>
                             </>
                         ) : (
                             <>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-y-[-2px] transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                                <span>IMPORTER HISTORIQUE EXCEL</span>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-y-[-2px] transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                                <span>IMPORT EXCEL</span>
                             </>
                         )}
                     </label>
@@ -485,21 +523,21 @@ export default function ReportingPage() {
             {/* KPI Cards - Always visible */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: "Visites totales", value: initialLoading ? "-" : filteredRows.length.toLocaleString("fr-FR"), sub: initialLoading ? "Chargement..." : `Flux de terrain actif`, color: "text-blue-400", bg: "border-t-blue-500/30", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> },
-                    { label: "Volume Total", value: initialLoading ? "-" : totalVolume.toLocaleString("fr-FR") + " L", sub: initialLoading ? "Chargement..." : "Capacité mensuelle cumulée", color: "text-primary", bg: "border-t-primary/30", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20" /><path d="m17 7-5-5-5 5" /><path d="m17 17-5 5-5-5" /></svg> },
-                    { label: "Opportunités Fortes", value: initialLoading ? "-" : filteredRows.filter(r => ["forte", "haute"].includes(String(r.opportunite_niveau).toLowerCase())).length.toLocaleString("fr-FR"), sub: initialLoading ? "Chargement..." : "Potentiel de conversion élevé", color: "text-emerald-500", bg: "border-t-emerald-500/30", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg> },
-                    { label: "Secteurs couverts", value: initialLoading ? "-" : [...new Set(filteredRows.map(r => r.secteur).filter(Boolean))].length, sub: initialLoading ? "Chargement..." : "Diversification du marché", color: "text-purple-400", bg: "border-t-purple-500/30", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg> },
+                    { label: "Visites totales", value: initialLoading ? "-" : filteredRows.length.toLocaleString("fr-FR"), sub: initialLoading ? "Chargement..." : `Flux de terrain actif`, color: "text-white", bg: "bg-blue-600", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> },
+                    { label: "Volume Total", value: initialLoading ? "-" : totalVolume.toLocaleString("fr-FR") + " L", sub: initialLoading ? "Chargement..." : "Capacité mensuelle cumulée", color: "text-white", bg: "bg-primary", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20" /><path d="m17 7-5-5-5 5" /><path d="m17 17-5 5-5-5" /></svg> },
+                    { label: "Opportunités Fortes", value: initialLoading ? "-" : filteredRows.filter(r => ["forte", "haute"].includes(String(r.opportunite_niveau).toLowerCase())).length.toLocaleString("fr-FR"), sub: initialLoading ? "Chargement..." : "Potentiel de conversion élevé", color: "text-white", bg: "bg-emerald-600", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg> },
+                    { label: "Secteurs couverts", value: initialLoading ? "-" : [...new Set(filteredRows.map(r => r.secteur).filter(Boolean))].length, sub: initialLoading ? "Chargement..." : "Diversification du marché", color: "text-white", bg: "bg-purple-600", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg> },
                 ].map((kpi, i) => (
-                    <div key={i} className={`premium-card relative overflow-hidden group p-6 border-t-2 ${kpi.bg}`}>
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-white/10 transition-all duration-500" />
+                    <div key={i} className={`premium-card relative overflow-hidden group p-6 border-none shadow-xl ${kpi.bg}`}>
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-white/20 transition-all duration-500" />
                         <div className="relative z-10">
-                            <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-300 ${kpi.color}`}>
+                            <div className={`w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-300 text-white`}>
                                 {kpi.icon}
                             </div>
                             <div className="space-y-1">
-                                <div className={`text-3xl font-black text-foreground group-hover:${kpi.color} transition-colors ${initialLoading ? 'opacity-50' : ''}`}>{kpi.value}</div>
-                                <div className="text-[10px] font-black text-muted uppercase tracking-widest">{kpi.label}</div>
-                                <div className="text-[10px] text-slate-600 font-bold group-hover:text-muted transition-colors">{kpi.sub}</div>
+                                <div className={`text-3xl font-black text-white transition-colors ${initialLoading ? 'opacity-50' : ''}`}>{kpi.value}</div>
+                                <div className="text-[10px] font-black text-white/70 uppercase tracking-widest">{kpi.label}</div>
+                                <div className="text-[10px] text-white/50 font-bold group-hover:text-white/80 transition-colors">{kpi.sub}</div>
                             </div>
                         </div>
                     </div>

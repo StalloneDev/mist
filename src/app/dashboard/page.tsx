@@ -3,6 +3,7 @@ import { getDashboardStats, getRecentActivities } from "@/app/actions/dashboard"
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import SectorAnalysisClient from "./SectorAnalysisClient";
 
 export default async function DashboardPage() {
     const session = await auth();
@@ -42,90 +43,90 @@ export default async function DashboardPage() {
             {/* Hero Scorecards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {/* Card 1: Volume */}
-                <div className="relative overflow-hidden group premium-card p-0">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
+                <div className="relative overflow-hidden group premium-card p-0 bg-primary border-none shadow-xl shadow-primary/20">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/20 transition-all duration-500" />
                     <div className="p-8">
                         <div className="flex justify-between items-start mb-6">
                             <div className="space-y-1">
-                                <div className="text-muted font-bold uppercase tracking-widest text-[10px]">Volume Potentiel Global</div>
+                                <div className="text-white/70 font-bold uppercase tracking-widest text-[10px]">Volume Potentiel Global</div>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground group-hover:text-primary transition-colors truncate">
+                                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white truncate">
                                         {Number(stats?.totals?.volumeTotal || 0).toLocaleString()}
                                     </span>
-                                    <span className="text-xs sm:text-sm font-bold text-muted">L/m</span>
+                                    <span className="text-xs sm:text-sm font-bold text-white/80">L/m</span>
                                 </div>
                             </div>
-                            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-foreground transition-all duration-300 shadow-lg shadow-primary/5">
+                            <div className="w-14 h-14 rounded-2xl bg-white/20 border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-primary transition-all duration-300 shadow-lg shadow-black/5">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v20" /><path d="m17 7-5-5-5 5" /><path d="m17 17-5 5-5-5" /></svg>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${Number(stats?.growth || 0) >= 0 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
+                            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${Number(stats?.growth || 0) >= 0 ? 'bg-white/20 text-white border-white/30' : 'bg-rose-500/20 text-rose-100 border-rose-500/30'}`}>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={Number(stats?.growth || 0) < 0 ? 'rotate-180' : ''}><path d="m5 15 7-7 7 7" /></svg>
                                 {Number(stats?.growth || 0) >= 0 ? '+' : ''}{stats?.growth || '0'}%
                             </div>
-                            <span className="text-xs font-medium text-muted">vs mois dernier</span>
+                            <span className="text-xs font-medium text-white/70">vs mois dernier</span>
                         </div>
                     </div>
-                    <div className="h-1.5 w-full bg-surface-3 overflow-hidden rounded-full">
-                        <div className="h-full bg-primary transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]" style={{ width: `${Math.min(Math.max(Number(stats?.growth || 0) + 50, 10), 100)}%` }} />
+                    <div className="h-1.5 w-full bg-black/10 overflow-hidden rounded-full">
+                        <div className="h-full bg-white transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(Math.max(Number(stats?.growth || 0) + 50, 10), 100)}%` }} />
                     </div>
                 </div>
 
                 {/* Card 2: Entreprises */}
-                <div className="relative overflow-hidden group premium-card p-0 border-t-2 border-t-blue-500/30">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/20 transition-all duration-500" />
+                <div className="relative overflow-hidden group premium-card p-0 bg-blue-600 border-none shadow-xl shadow-blue-600/20">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/20 transition-all duration-500" />
                     <div className="p-8">
                         <div className="flex justify-between items-start mb-6">
                             <div className="space-y-1">
-                                <div className="text-muted font-bold uppercase tracking-widest text-[10px]">Portefeuille Clients</div>
+                                <div className="text-white/70 font-bold uppercase tracking-widest text-[10px]">Portefeuille Clients</div>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl md:text-5xl font-black text-foreground group-hover:text-blue-500 transition-colors truncate">
+                                    <span className="text-4xl md:text-5xl font-black text-white">
                                         {stats?.totals?.entreprises || 0}
                                     </span>
-                                    <span className="text-xs sm:text-sm font-bold text-muted">Comptes</span>
+                                    <span className="text-xs sm:text-sm font-bold text-white/80">Comptes</span>
                                 </div>
                             </div>
-                            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-foreground transition-all duration-300 shadow-lg shadow-blue-500/5">
+                            <div className="w-14 h-14 rounded-2xl bg-white/20 border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-blue-600 transition-all duration-300 shadow-lg shadow-black/5">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /></svg>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="flex -space-x-2">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="w-6 h-6 rounded-full border-2 border-surface-1 bg-surface-3 flex items-center justify-center text-[10px] font-bold text-muted">
+                                    <div key={i} className="w-6 h-6 rounded-full border-2 border-white/20 bg-white/10 flex items-center justify-center text-[10px] font-bold text-white">
                                         {String.fromCharCode(64 + i)}
                                     </div>
                                 ))}
                             </div>
-                            <span className="text-xs font-bold text-muted ml-2">{stats?.activeSectors || 0} secteurs clés actifs</span>
+                            <span className="text-xs font-bold text-white ml-2">{stats?.activeSectors || 0} secteurs clés actifs</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Card 3: Visites */}
-                <div className="relative overflow-hidden group premium-card p-0 border-t-2 border-t-emerald-500/30">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-all duration-500" />
+                <div className="relative overflow-hidden group premium-card p-0 bg-emerald-600 border-none shadow-xl shadow-emerald-600/20">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/20 transition-all duration-500" />
                     <div className="p-8">
                         <div className="flex justify-between items-start mb-6">
                             <div className="space-y-1">
-                                <div className="text-muted font-bold uppercase tracking-widest text-[10px]">Engagement Terrain</div>
+                                <div className="text-white/70 font-bold uppercase tracking-widest text-[10px]">Engagement Terrain</div>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl md:text-5xl font-black text-foreground group-hover:text-emerald-500 transition-colors truncate">
+                                    <span className="text-4xl md:text-5xl font-black text-white">
                                         {stats?.totals?.visites || 0}
                                     </span>
-                                    <span className="text-xs sm:text-sm font-bold text-muted">Visites</span>
+                                    <span className="text-xs sm:text-sm font-bold text-white/80">Visites</span>
                                 </div>
                             </div>
-                            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-foreground transition-all duration-300 shadow-lg shadow-emerald-500/5">
+                            <div className="w-14 h-14 rounded-2xl bg-white/20 border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-emerald-600 transition-all duration-300 shadow-lg shadow-black/5">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 19 21 21 12 3 3 21 12 19Z" /></svg>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-full h-1 bg-surface-3 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 transition-all duration-700 shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${stats?.engagement || 0}%` }} />
+                            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-white transition-all duration-700 shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${stats?.engagement || 0}%` }} />
                             </div>
-                            <span className="text-[10px] font-black text-emerald-500 whitespace-nowrap uppercase">OBJ. {stats?.engagement || 0}%</span>
+                            <span className="text-[10px] font-black text-white whitespace-nowrap uppercase">OBJ. {stats?.engagement || 0}%</span>
                         </div>
                     </div>
                 </div>
@@ -134,53 +135,7 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
                 {/* Left Column: Side Widgets */}
                 <div className="lg:col-span-1 flex flex-col gap-8">
-                    {/* Analyse Sectorielle */}
-                    <div className="premium-panel p-8 flex flex-col shadow-xl">
-                        <div className="flex justify-between items-center mb-10">
-                            <h2 className="text-xl font-black text-foreground tracking-tight">Analyse Sectorielle</h2>
-                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 space-y-8">
-                            {stats?.sectorDistribution?.map((item: any, idx: number) => {
-                                const maxVal = Math.max(...(stats?.sectorDistribution?.map((s: any) => s.value) || [0]), 1);
-                                const percentage = (item.value / maxVal) * 100;
-                                return (
-                                    <div key={idx} className="group">
-                                        <div className="flex justify-between items-end mb-3">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-black text-muted uppercase tracking-widest">{item.name}</span>
-                                                <span className="text-sm font-bold text-foreground mt-0.5 group-hover:text-primary transition-all">{item.value.toLocaleString()} L</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-slate-600 bg-white/5 px-2 py-0.5 rounded uppercase">
-                                                {Math.round((item.value / (stats?.totals?.volumeTotal || 1)) * 100)}%
-                                            </span>
-                                        </div>
-                                        <div className="progress-bar-bg">
-                                            <div
-                                                className="progress-bar-fill"
-                                                style={{ width: `${Math.max(percentage, 5)}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {(!stats?.sectorDistribution || stats.sectorDistribution.length === 0) && (
-                                <div className="flex flex-col items-center justify-center py-20 opacity-60 italic text-sm text-muted gap-4">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M2 20h20" /><path d="M7 20v-5" /><path d="M11 20v-9" /><path d="M15 20v-13" /><path d="M19 20v-17" /></svg>
-                                    Aucune donnée sectorielle
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="mt-10 pt-6 border-t">
-                            <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-muted hover:text-foreground transition-all text-xs font-bold uppercase tracking-widest">
-                                Détails par Secteur
-                            </button>
-                        </div>
-                    </div>
+                    <SectorAnalysisClient stats={stats} />
 
                     {/* Prochains RDV */}
                     <div className="premium-panel p-8 flex flex-col shadow-xl border-primary/10">

@@ -6,21 +6,6 @@ import { revalidatePath } from "next/cache";
 export async function getReportingData() {
     try {
         const data = await db.reportingVisite.findMany({
-            select: {
-                id: true,
-                excel_id: true,
-                date_visite: true,
-                commercial: true,
-                type_collecte: true,
-                raison_sociale: true,
-                secteur: true,
-                localisation: true,
-                opportunite_niveau: true,
-                volume_potentiel: true,
-                volume_potentiel_dir: true,
-                secteur_autre: true,
-                import_date: true
-            },
             orderBy: {
                 id: 'asc'
             }
