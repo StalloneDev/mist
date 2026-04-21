@@ -85,7 +85,7 @@ export default function StatisticsClient({ data }: { data: any }) {
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                                 <XAxis dataKey="month" stroke="#64748b" tick={{fill: '#64748b'}} />
                                 <YAxis stroke="#64748b" tick={{fill: '#64748b'}} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
-                                <Tooltip formatter={(value: number) => [value.toLocaleString("fr-FR") + " L", "Volume"]} labelStyle={{color: '#0f172a'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                <Tooltip formatter={(value) => [Number(value).toLocaleString("fr-FR") + " L", "Volume"]} labelStyle={{color: '#0f172a'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                                 <Line type="monotone" dataKey="volume" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                             </LineChart>
                         </ResponsiveContainer>
@@ -116,7 +116,7 @@ export default function StatisticsClient({ data }: { data: any }) {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value: number) => [value.toLocaleString("fr-FR") + " L", "Volume"]} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                <Tooltip formatter={(value) => [Number(value).toLocaleString("fr-FR") + " L", "Volume"]} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                                 <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '11px', lineHeight: '24px'}} />
                             </PieChart>
                         </ResponsiveContainer>
@@ -136,8 +136,8 @@ export default function StatisticsClient({ data }: { data: any }) {
                                 <XAxis dataKey="name" stroke="#64748b" tick={{fill: '#64748b'}} />
                                 <YAxis yAxisId="left" stroke="#64748b" tick={{fill: '#64748b'}} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
                                 <YAxis yAxisId="right" orientation="right" stroke="#10b981" tick={{fill: '#10b981'}} />
-                                <Tooltip formatter={(value: number, name: string) => [
-                                    name === "volume" ? value.toLocaleString("fr-FR") + " L" : value,
+                                <Tooltip formatter={(value, name) => [
+                                    name === "volume" ? Number(value).toLocaleString("fr-FR") + " L" : value,
                                     name === "volume" ? "Volume" : "Opportunités Fortes"
                                 ]} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                                 <Legend wrapperStyle={{ fontSize: '11px' }} />
